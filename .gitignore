@@ -1,4 +1,6 @@
 # Prerequisites
+*.DS*
+*._*
 *.d
 
 # Compiled Object files

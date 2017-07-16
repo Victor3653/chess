@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>images/black_pawn.svg</file>
+        <file>images/white_pawn.svg</file>
+        <file>images/chess_board.jpg</file>
+    </qresource>
+</RCC>
