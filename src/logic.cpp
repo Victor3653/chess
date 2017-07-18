@@ -5,7 +5,8 @@
 #include <iostream>
 
 struct                                  Figure {
-    int                                   type;
+    bool                                side;
+    unsigned                         type;
     int                                   x;
     int                                   y;
 };
@@ -14,9 +15,10 @@ struct                                  Figure {
 struct                                  Logic::Impl {
     QList<Figure>                 figures;
     int                                   findByPosition(int x, int y);
+    int                                   test(unsigned type);
 };
 
-int Logic::Impl::findByPosition(int x, int y) {
+int                                       Logic::Impl::findByPosition(int x, int y) {
     for (auto i = 0; i < figures.size(); ++i) {
         if (figures[i].x != x || figures[i].y != y ) {
             continue;
@@ -26,10 +28,14 @@ int Logic::Impl::findByPosition(int x, int y) {
     return -1;
 }
 
+int                                       Logic::Impl::test(unsigned type) {
+    std::cout << "type is :" << type << std::endl;
+    return (0);
+}
 
 Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()) {
-//    impl->figures << Figure { 0, 0, 0 };
-//    impl->figures << Figure { 1, 7, 7 };
+    impl->figures << Figure { white, Pawn, 1, 0};
+    impl->figures << Figure { black, Pawn, 6, 7};
 }
 
 Logic::~Logic() {
@@ -46,7 +52,8 @@ int                                         Logic::rowCount(const QModelIndex & 
 
 QHash<int, QByteArray>       Logic::roleNames(void) const {
     QHash<int, QByteArray> names;
-    names.insert(Roles::Type      , "type");
+    names.insert(Roles::Side         , "side");
+    names.insert(Roles::Type         , "type");
     names.insert(Roles::PositionX , "positionX");
     names.insert(Roles::PositionY , "positionY");
     return names;
@@ -66,6 +73,7 @@ QVariant                                Logic::data(const QModelIndex & modelInd
     Figure      &figure = impl->figures[index];
 
     switch (role) {
+    case Roles::Side     : return figure.side;
     case Roles::Type     : return figure.type;
     case Roles::PositionX: return figure.x;
     case Roles::PositionY: return figure.y;
@@ -80,10 +88,12 @@ void                                       Logic::clear(void) {
     endResetModel();
 }
 
-bool                                       Logic::move(int fromX, int fromY, int toX, int toY) {
+bool                                       Logic::move(int fromX, int fromY, int toX, int toY, unsigned type) {
 
     std::cout << fromX << " " << fromY << " " << toX << " " << toY << std::endl;
     int index = impl->findByPosition(fromX, fromY);
+
+    impl->test(type);
 
     if (index < 0) {
         std::cout << "Index: " << index << std::endl;
