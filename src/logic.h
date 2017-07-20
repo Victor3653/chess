@@ -2,8 +2,7 @@
 #include <memory>
 #include <QAbstractListModel>
 
-#define white true
-#define black !true
+class           MovesList;
 
 class Logic: public QAbstractListModel
 {
@@ -22,7 +21,9 @@ public:
     };
 
     enum Types {
-        Pawn  = 0b00000000
+        Pawn  = 0x0,
+        Rook = 0x1,
+        Bishop = 0x2
     };
 
 public:
@@ -33,7 +34,7 @@ public:
     int                                         boardSize() const;
 
     Q_INVOKABLE void             clear(void);
-    Q_INVOKABLE bool             move(int fromX, int fromY, int toX, int toY, unsigned type);
+    Q_INVOKABLE bool             move(int fromX, int fromY, int toX, int toY, bool side, unsigned type);
 
 protected:
     int                                         rowCount(const QModelIndex & parent) const override;
@@ -42,5 +43,6 @@ protected:
 
 private:
     struct Impl;
-    std::unique_ptr<Impl> impl;
+    std::unique_ptr<Impl>            impl;
+    std::unique_ptr<MovesList>   movesList;
 };

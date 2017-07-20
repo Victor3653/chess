@@ -15,11 +15,15 @@ ApplicationWindow {
 
     property var images: [
         [
-            {'imgPath' : "/images/white_pawn.svg"}
+            {'imgPath' : "/images/white_pawn.svg"},
+            {'imgPath' : "/images/white_rook.svg"},
+            {'imgPath' : "/images/white_bishop.svg"}
         ],
 
         [
-            {'imgPath' : "/images/black_pawn.svg"}
+            {'imgPath' : "/images/black_pawn.svg"},
+            {'imgPath' : "/images/black_rook.svg"},
+            {'imgPath' : "/images/black_bishop.svg"}
         ]
     ]
 
@@ -45,6 +49,19 @@ ApplicationWindow {
             screen.pop()
         }
 }
+
+    Button {
+        id: clearButton
+        anchors.bottom: parent.bottom
+
+        text: "restart"
+        anchors.right: back.left
+        onClicked: {
+            console.log("Restarted");
+            logic.clear();
+        }
+    }
+
     Component {
         // First screen
         id: gameBoard
@@ -75,8 +92,8 @@ ApplicationWindow {
     Component {
         id: buttonNewGame
         Button {
-            anchors.right: root.rightMargin
-
+            x: logic.boardSize * squareSize
+            width: root.width - buttonNewGame.x
             text: "New Game"
             onClicked: {
                   console.log("New Game");
@@ -100,7 +117,7 @@ ApplicationWindow {
                         x: squareSize * positionX
                         y: squareSize * positionY
 
-                        source: images[(side == true) ? 1 : 0][type].imgPath
+                        source: images[(side == true) ? 0 : 1][type].imgPath
 
                         MouseArea {
                             anchors.fill: parent
@@ -113,11 +130,11 @@ ApplicationWindow {
                                 startY = parent.y;
                             }
                             onReleased: {
-                                var fromX = startX / squareSize;
+                                var  fromX = startX / squareSize;
                                 var fromY = startY / squareSize;
                                 var toX   = (parent.x + mouseX) / squareSize;
                                 var toY   = (parent.y + mouseY) / squareSize;
-                                if (!logic.move(fromX, fromY, toX, toY, type))
+                                if (!logic.move(fromX, fromY, toX, toY, side, type))
                                 {
                                     parent.x = startX;
                                     parent.y = startY;
@@ -139,6 +156,11 @@ ApplicationWindow {
         Item {
             id: screenThree
         }
+    }
+
+    Connections {
+        target: clearButton
+        onClicked: print("clicked")
     }
 }
 

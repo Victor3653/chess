@@ -1,8 +1,8 @@
 #include "logic.h"
+#include "moveslist.h"
 #include <QList>
 #include <QByteArray>
 #include <QHash>
-#include <iostream>
 
 struct                                  Figure {
     bool                                side;
@@ -15,7 +15,7 @@ struct                                  Figure {
 struct                                  Logic::Impl {
     QList<Figure>                 figures;
     int                                   findByPosition(int x, int y);
-    int                                   test(unsigned type);
+    void                                 restart(void);
 };
 
 int                                       Logic::Impl::findByPosition(int x, int y) {
@@ -28,14 +28,47 @@ int                                       Logic::Impl::findByPosition(int x, int
     return -1;
 }
 
-int                                       Logic::Impl::test(unsigned type) {
-    std::cout << "type is :" << type << std::endl;
-    return (0);
+void                                     Logic::Impl::restart(void) {
+
+    for (auto i = 0; i < ((figures.size() - 2) / 2); ++i) {
+           if (figures[i].side == WHITE) {
+               figures[i].x = i;
+               figures[i].y = WHITE_SP;
+           }
+    }
+    for (auto i = (figures.size() - 2) / 2; i < figures.size() - 2; ++i) {
+           if (figures[i].side == BLACK) {
+               figures[i].x = i - (figures.size() / 2);
+               figures[i].y = BLACK_SP;
+           }
+    }
 }
 
-Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()) {
-    impl->figures << Figure { white, Pawn, 1, 0};
-    impl->figures << Figure { black, Pawn, 6, 7};
+Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()) {
+
+    impl->figures << Figure { WHITE, Pawn, 0, 6};
+    impl->figures << Figure { WHITE, Pawn, 1, 6};
+    impl->figures << Figure { WHITE, Pawn, 2, 6};
+    impl->figures << Figure { WHITE, Pawn, 3, 6};
+    impl->figures << Figure { WHITE, Pawn, 4, 6};
+    impl->figures << Figure { WHITE, Pawn, 5, 6};
+    impl->figures << Figure { WHITE, Pawn, 6, 6};
+    impl->figures << Figure { WHITE, Pawn, 7, 6};
+
+    impl->figures << Figure { BLACK, Pawn, 0, 1};
+    impl->figures << Figure { BLACK, Pawn, 1, 1};
+    impl->figures << Figure { BLACK, Pawn, 2, 1};
+    impl->figures << Figure { BLACK, Pawn, 3, 1};
+    impl->figures << Figure { BLACK, Pawn, 4, 1};
+    impl->figures << Figure { BLACK, Pawn, 5, 1};
+    impl->figures << Figure { BLACK, Pawn, 6, 1};
+    impl->figures << Figure { BLACK, Pawn, 7, 1};
+
+    impl->figures << Figure { WHITE, Rook, 0, 7 };
+    impl->figures << Figure { WHITE, Rook, 7, 7 };
+
+    impl->figures << Figure { BLACK, Rook, 0, 0 };
+    impl->figures << Figure { BLACK, Rook, 7, 0 };
 }
 
 Logic::~Logic() {
@@ -84,32 +117,39 @@ QVariant                                Logic::data(const QModelIndex & modelInd
 
 void                                       Logic::clear(void) {
     beginResetModel();
-    impl->figures.clear();
+    impl->restart();
     endResetModel();
 }
 
-bool                                       Logic::move(int fromX, int fromY, int toX, int toY, unsigned type) {
+bool                                       Logic::move(int fromX, int fromY, int toX, int toY, bool side, unsigned type) {
+
 
     std::cout << fromX << " " << fromY << " " << toX << " " << toY << std::endl;
     int index = impl->findByPosition(fromX, fromY);
 
-    impl->test(type);
+
 
     if (index < 0) {
         std::cout << "Index: " << index << std::endl;
         return false;
     }
   // bug in last function, it needs to know from pos
-    if (toX < 0 || toX >= BOARD_SIZE || toY < 0 || toY >= BOARD_SIZE || impl->findByPosition(toX, toY) >= 0) {
+    int     is_not_in_gameboard = (toX < 0 || toX >= BOARD_SIZE || toY < 0 || toY >= BOARD_SIZE);
 
+    if (is_not_in_gameboard || impl->findByPosition(toX, toY) >= 0) {
         std::cout << "False " << std::endl;
         return false;
     }
+    else if (!movesList->basicMoves(fromX, fromY, toX, toY, side, type)) {
+        return false;
+    }
 
+    beginResetModel();
     impl->figures[index].x = toX;
     impl->figures[index].y = toY;
     QModelIndex topLeft = createIndex(index, 0);
     QModelIndex bottomRight = createIndex(index, 0);
     emit dataChanged(topLeft, bottomRight);
+    endResetModel();
     return true;
 }
