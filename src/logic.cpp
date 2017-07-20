@@ -106,6 +106,12 @@ Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), mo
 
     impl->figures << Figure { BLACK, Knight, 1, 0 };
     impl->figures << Figure { BLACK, Knight, 6, 0 };
+
+    impl->figures << Figure { WHITE, Queen, 3, 7};
+    impl->figures << Figure { WHITE, King, 4, 7};
+
+    impl->figures << Figure { BLACK, Queen, 4, 0};
+    impl->figures << Figure { BLACK, King, 3, 0};
 }
 
 Logic::~Logic() {

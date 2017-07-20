@@ -21,10 +21,12 @@ public:
     };
 
     enum Types {
-        Pawn  = 0x0,
-        Rook = 0x1,
-        Bishop = 0x2,
-        Knight = 0x3
+        Pawn,
+        Rook,
+        Bishop,
+        Knight,
+        Queen,
+        King
     };
 
 public:
