@@ -23,7 +23,8 @@ public:
     enum Types {
         Pawn  = 0x0,
         Rook = 0x1,
-        Bishop = 0x2
+        Bishop = 0x2,
+        Knight = 0x3
     };
 
 public:
@@ -31,18 +32,18 @@ public:
     ~Logic();
 
     Q_PROPERTY(int boardSize READ boardSize CONSTANT);
-    int                                         boardSize() const;
+    int                       boardSize() const;
 
-    Q_INVOKABLE void             clear(void);
-    Q_INVOKABLE bool             move(int fromX, int fromY, int toX, int toY, bool side, unsigned type);
+    Q_INVOKABLE void          clear(void);
+    Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY, bool side, unsigned type);
 
 protected:
-    int                                         rowCount(const QModelIndex & parent) const override;
-    QVariant                               data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-    QHash<int, QByteArray>      roleNames() const override;
+    int                       rowCount(const QModelIndex & parent) const override;
+    QVariant                  data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray>    roleNames() const override;
 
 private:
     struct Impl;
-    std::unique_ptr<Impl>            impl;
-    std::unique_ptr<MovesList>   movesList;
+    std::unique_ptr<Impl> impl;
+    std::unique_ptr<MovesList> movesList;
 };

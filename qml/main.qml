@@ -17,27 +17,18 @@ ApplicationWindow {
         [
             {'imgPath' : "/images/white_pawn.svg"},
             {'imgPath' : "/images/white_rook.svg"},
-            {'imgPath' : "/images/white_bishop.svg"}
+            {'imgPath' : "/images/white_bishop.svg"},
+            {'imgPath' : "/images/white_knight.svg"}
         ],
 
         [
             {'imgPath' : "/images/black_pawn.svg"},
             {'imgPath' : "/images/black_rook.svg"},
-            {'imgPath' : "/images/black_bishop.svg"}
+            {'imgPath' : "/images/black_bishop.svg"},
+            {'imgPath' : "/images/black_knight.svg"}
         ]
     ]
 
-//    Button {
-//        id: loadGame
-//        anchors.right: parent.right
-//        anchors.top: newGame.bottom
-
-//        text: "Load Game"
-//        onClicked: {
-//              console.log("Load Game");
-//              screen.push(screenThree);
-//        }
-//    }
     Button {
         id: back
         anchors.right: parent.right
@@ -91,6 +82,7 @@ ApplicationWindow {
 
     Component {
         id: buttonNewGame
+
         Button {
             x: logic.boardSize * squareSize
             width: root.width - buttonNewGame.x
@@ -106,45 +98,42 @@ ApplicationWindow {
         id: chessPlacement
 
         Item {
+            Loader {sourceComponent: gameBoard}
+            Repeater {
+                model: logic
+                Image {
+                    height: squareSize
+                    width : squareSize
 
-                Loader {sourceComponent: gameBoard}
-                Repeater {
-                    model: logic
-                    Image {
-                        height: squareSize
-                        width : squareSize
+                    x: squareSize * positionX
+                    y: squareSize * positionY
 
-                        x: squareSize * positionX
-                        y: squareSize * positionY
+                    source: images[(side == true) ? 0 : 1][type].imgPath
 
-                        source: images[(side == true) ? 0 : 1][type].imgPath
-
-                        MouseArea {
-                            anchors.fill: parent
-                            drag.target: parent
-                            property int startX: 0
-                            property int startY: 0
-                            onPressed: {
-                                console.log("On press: ", parent.x, parent.y);
-                                startX = parent.x;
-                                startY = parent.y;
-                            }
-                            onReleased: {
-                                var  fromX = startX / squareSize;
-                                var fromY = startY / squareSize;
-                                var toX   = (parent.x + mouseX) / squareSize;
-                                var toY   = (parent.y + mouseY) / squareSize;
-                                if (!logic.move(fromX, fromY, toX, toY, side, type))
-                                {
-                                    parent.x = startX;
-                                    parent.y = startY;
-                                }
+                    MouseArea {
+                        anchors.fill: parent
+                        drag.target: parent
+                        property int startX: 0
+                        property int startY: 0
+                        onPressed: {
+                            console.log("On press: ", parent.x, parent.y);
+                            startX = parent.x;
+                            startY = parent.y;
+                        }
+                        onReleased: {
+                            var  fromX = startX / squareSize;
+                            var fromY = startY / squareSize;
+                            var toX   = (parent.x + mouseX) / squareSize;
+                            var toY   = (parent.y + mouseY) / squareSize;
+                            if (!logic.move(fromX, fromY, toX, toY, side, type))
+                            {
+                                parent.x = startX;
+                                parent.y = startY;
                             }
                         }
                     }
                 }
-
-
+            }
         }
     }
 

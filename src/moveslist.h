@@ -19,6 +19,8 @@ public:
 private:
     int         _pawn_move(int x_start, int y_start, int x_end, int y_end, bool side, int type);
     int         _rook_move(int x_start, int y_start, int x_end, int y_end, bool side, int type);
+    int         _bishop_move(int x_start, int y_start, int x_end, int y_end, bool side, int type);
+    int         _knight_move(int x_start, int y_start, int x_end, int y_end, bool side, int type);
 };
 
 #endif // MOVESLIST_H

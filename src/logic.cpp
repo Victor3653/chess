@@ -4,21 +4,23 @@
 #include <QByteArray>
 #include <QHash>
 
-struct                                  Figure {
-    bool                                side;
-    unsigned                         type;
-    int                                   x;
-    int                                   y;
+struct              Figure {
+    bool            side;
+    unsigned        type;
+    int             x;
+    int             y;
 };
 
 
-struct                                  Logic::Impl {
-    QList<Figure>                 figures;
-    int                                   findByPosition(int x, int y);
-    void                                 restart(void);
+struct              Logic::Impl {
+    QList<Figure>   figures;
+    int             findByPosition(int x, int y);
+    int             moveRange(int fromX, int fromY, int toX, int toY, int type);
+    void            restart(void);
 };
 
-int                                       Logic::Impl::findByPosition(int x, int y) {
+int                 Logic::Impl::findByPosition(int x, int y) {
+
     for (auto i = 0; i < figures.size(); ++i) {
         if (figures[i].x != x || figures[i].y != y ) {
             continue;
@@ -28,7 +30,30 @@ int                                       Logic::Impl::findByPosition(int x, int
     return -1;
 }
 
-void                                     Logic::Impl::restart(void) {
+int                 Logic::Impl::moveRange(int fromX, int fromY, int toX, int toY, int type) {
+
+    int  stepX  = fromX < toX ? 1 : -1;
+    int  stepY  = fromY < toY ? 1 : -1;
+
+    if (fromX == toX)
+        stepX = 0;
+    if (fromY == toY)
+        stepY = 0;
+    if (type == Knight) {
+        fromX = toX - stepX;
+        fromY = toY - stepY;
+    }
+    while(fromX != toX || fromY != toY)
+    {
+        fromX += stepX;
+        fromY += stepY;
+        if (findByPosition(fromX, fromY) >= 0)
+            return (1);
+    }
+    return (0);
+}
+
+void                Logic::Impl::restart(void) {
 
     for (auto i = 0; i < ((figures.size() - 2) / 2); ++i) {
            if (figures[i].side == WHITE) {
@@ -46,40 +71,52 @@ void                                     Logic::Impl::restart(void) {
 
 Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()) {
 
-    impl->figures << Figure { WHITE, Pawn, 0, 6};
-    impl->figures << Figure { WHITE, Pawn, 1, 6};
-    impl->figures << Figure { WHITE, Pawn, 2, 6};
-    impl->figures << Figure { WHITE, Pawn, 3, 6};
-    impl->figures << Figure { WHITE, Pawn, 4, 6};
-    impl->figures << Figure { WHITE, Pawn, 5, 6};
-    impl->figures << Figure { WHITE, Pawn, 6, 6};
-    impl->figures << Figure { WHITE, Pawn, 7, 6};
+    impl->figures << Figure { WHITE, Pawn, 0, 6 };
+    impl->figures << Figure { WHITE, Pawn, 1, 6 };
+    impl->figures << Figure { WHITE, Pawn, 2, 6 };
+    impl->figures << Figure { WHITE, Pawn, 3, 6 };
+    impl->figures << Figure { WHITE, Pawn, 4, 6 };
+    impl->figures << Figure { WHITE, Pawn, 5, 6 };
+    impl->figures << Figure { WHITE, Pawn, 6, 6 };
+    impl->figures << Figure { WHITE, Pawn, 7, 6 };
 
-    impl->figures << Figure { BLACK, Pawn, 0, 1};
-    impl->figures << Figure { BLACK, Pawn, 1, 1};
-    impl->figures << Figure { BLACK, Pawn, 2, 1};
-    impl->figures << Figure { BLACK, Pawn, 3, 1};
-    impl->figures << Figure { BLACK, Pawn, 4, 1};
-    impl->figures << Figure { BLACK, Pawn, 5, 1};
-    impl->figures << Figure { BLACK, Pawn, 6, 1};
-    impl->figures << Figure { BLACK, Pawn, 7, 1};
+    impl->figures << Figure { BLACK, Pawn, 0, 1 };
+    impl->figures << Figure { BLACK, Pawn, 1, 1 };
+    impl->figures << Figure { BLACK, Pawn, 2, 1 };
+    impl->figures << Figure { BLACK, Pawn, 3, 1 };
+    impl->figures << Figure { BLACK, Pawn, 4, 1 };
+    impl->figures << Figure { BLACK, Pawn, 5, 1 };
+    impl->figures << Figure { BLACK, Pawn, 6, 1 };
+    impl->figures << Figure { BLACK, Pawn, 7, 1 };
 
     impl->figures << Figure { WHITE, Rook, 0, 7 };
     impl->figures << Figure { WHITE, Rook, 7, 7 };
 
     impl->figures << Figure { BLACK, Rook, 0, 0 };
     impl->figures << Figure { BLACK, Rook, 7, 0 };
+
+    impl->figures << Figure { WHITE, Bishop, 2, 7 };
+    impl->figures << Figure { WHITE, Bishop, 5, 7 };
+
+    impl->figures << Figure { BLACK, Bishop, 2, 0 };
+    impl->figures << Figure { BLACK, Bishop, 5, 0 };
+
+    impl->figures << Figure { WHITE, Knight, 1, 7 };
+    impl->figures << Figure { WHITE, Knight, 6, 7 };
+
+    impl->figures << Figure { BLACK, Knight, 1, 0 };
+    impl->figures << Figure { BLACK, Knight, 6, 0 };
 }
 
 Logic::~Logic() {
 
 }
 
-int                                         Logic::boardSize() const {
+int                 Logic::boardSize() const {
     return BOARD_SIZE;
 }
 
-int                                         Logic::rowCount(const QModelIndex & ) const {
+int                 Logic::rowCount(const QModelIndex & ) const {
     return impl->figures.size();
 }
 
@@ -92,7 +129,7 @@ QHash<int, QByteArray>       Logic::roleNames(void) const {
     return names;
 }
 
-QVariant                                Logic::data(const QModelIndex & modelIndex, int role) const {
+QVariant            Logic::data(const QModelIndex & modelIndex, int role) const {
     if (!modelIndex.isValid()) {
         return QVariant();
     }
@@ -115,34 +152,30 @@ QVariant                                Logic::data(const QModelIndex & modelInd
     return QVariant();
 }
 
-void                                       Logic::clear(void) {
+void                Logic::clear(void) {
     beginResetModel();
     impl->restart();
     endResetModel();
 }
 
-bool                                       Logic::move(int fromX, int fromY, int toX, int toY, bool side, unsigned type) {
+bool                Logic::move(int fromX, int fromY, int toX, int toY, bool side, unsigned type) {
 
 
     std::cout << fromX << " " << fromY << " " << toX << " " << toY << std::endl;
+
     int index = impl->findByPosition(fromX, fromY);
-
-
 
     if (index < 0) {
         std::cout << "Index: " << index << std::endl;
         return false;
     }
-  // bug in last function, it needs to know from pos
+
     int     is_not_in_gameboard = (toX < 0 || toX >= BOARD_SIZE || toY < 0 || toY >= BOARD_SIZE);
 
-    if (is_not_in_gameboard || impl->findByPosition(toX, toY) >= 0) {
-        std::cout << "False " << std::endl;
+    if (is_not_in_gameboard)
         return false;
-    }
-    else if (!movesList->basicMoves(fromX, fromY, toX, toY, side, type)) {
+    else if (!movesList->basicMoves(fromX, fromY, toX, toY, side, type) || impl->moveRange(fromX, fromY, toX, toY, type))
         return false;
-    }
 
     beginResetModel();
     impl->figures[index].x = toX;
