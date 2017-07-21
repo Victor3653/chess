@@ -15,7 +15,7 @@ struct              Figure {
 struct              Logic::Impl {
     QList<Figure>   figures;
     int             findByPosition(int x, int y);
-    int             moveRange(int fromX, int fromY, int toX, int toY, int type);
+    bool            moveRange(int fromX, int fromY, int toX, int toY);
     void            restart(void);
 };
 
@@ -30,27 +30,27 @@ int                 Logic::Impl::findByPosition(int x, int y) {
     return -1;
 }
 
-int                 Logic::Impl::moveRange(int fromX, int fromY, int toX, int toY, int type) {
+bool               Logic::Impl::moveRange(int fromX, int fromY, int toX, int toY) {
 
     int  stepX  = fromX < toX ? 1 : -1;
     int  stepY  = fromY < toY ? 1 : -1;
 
     if (fromX == toX)
         stepX = 0;
+    else
+        fromX += stepX;
     if (fromY == toY)
         stepY = 0;
-    if (type == Knight) {
-        fromX = toX - stepX;
-        fromY = toY - stepY;
-    }
+    else
+        fromY += stepY;
     while(fromX != toX || fromY != toY)
     {
+        if (findByPosition(fromX, fromY) >= 0)
+            return (true);
         fromX += stepX;
         fromY += stepY;
-        if (findByPosition(fromX, fromY) >= 0)
-            return (1);
     }
-    return (0);
+    return (false);
 }
 
 void                Logic::Impl::restart(void) {
@@ -128,8 +128,8 @@ int                 Logic::rowCount(const QModelIndex & ) const {
 
 QHash<int, QByteArray>       Logic::roleNames(void) const {
     QHash<int, QByteArray> names;
-    names.insert(Roles::Side         , "side");
-    names.insert(Roles::Type         , "type");
+    names.insert(Roles::Side      , "side");
+    names.insert(Roles::Type      , "type");
     names.insert(Roles::PositionX , "positionX");
     names.insert(Roles::PositionY , "positionY");
     return names;
@@ -160,35 +160,89 @@ QVariant            Logic::data(const QModelIndex & modelIndex, int role) const 
 
 void                Logic::clear(void) {
     beginResetModel();
-    impl->restart();
+    impl->figures.clear();
     endResetModel();
 }
 
-bool                Logic::move(int fromX, int fromY, int toX, int toY, bool side, unsigned type) {
-
-
+bool                Logic::move(int fromX, int fromY, int toX, int toY) {
     std::cout << fromX << " " << fromY << " " << toX << " " << toY << std::endl;
 
-    int index = impl->findByPosition(fromX, fromY);
-
-    if (index < 0) {
-        std::cout << "Index: " << index << std::endl;
+    static int      turn = 0;
+    int             fromIndex = impl->findByPosition(fromX, fromY);
+    int             toIndex = impl->findByPosition(toX, toY);
+    bool            in_gameboard = (toX >= 0 && toX < BOARD_SIZE && toY >= 0 && toY < BOARD_SIZE);
+    // What it is 42, maybe it's an end of game or begining of maybe it's a new one
+    if (turn == 42 || ((bool)turn) == impl->figures[fromIndex].side)
+        return false;
+    
+    if (fromIndex < 0 || !in_gameboard){
+        std::cout << "bad margins"<< std::endl;
         return false;
     }
-
-    int     is_not_in_gameboard = (toX < 0 || toX >= BOARD_SIZE || toY < 0 || toY >= BOARD_SIZE);
-
-    if (is_not_in_gameboard)
-        return false;
-    else if (!movesList->basicMoves(fromX, fromY, toX, toY, side, type) || impl->moveRange(fromX, fromY, toX, toY, type))
-        return false;
-
+    // if chess piece is blocked, Knight cant be blocked
+    if (impl->figures[fromIndex].type != Knight) {
+        if (impl->moveRange(fromX, fromY, toX, toY)) {
+            std::cout << "is blocked " << std::endl;
+            return false;
+        }
+    }
+    // if chess piece hits
+    if (toIndex > 0) {
+        // if pawn hits
+        if (impl->figures[fromIndex].type == Pawn) {
+            if (!movesList->pawnHit(fromX, fromY, toX, toY, impl->figures[fromIndex].side)) {
+                std::cout << "wrong pawn hit" << std::endl;
+                return false;
+            }
+        }
+        // any other piece hits
+        else {
+            if (!movesList->basicMoves(fromX, fromY, toX, toY, impl->figures[fromIndex].side, impl->figures[fromIndex].type)) {
+                std::cout << "wrong move" << std::endl;
+                return false;
+            }
+        }
+        // ally piece 
+        if (impl->figures[fromIndex].side == impl->figures[toIndex].side) {
+            std::cout << "hitting teammate" << std::endl;
+            return false;
+        }
+        // update model that was hit
+        else {
+            std::cout << "hitting opponent" << std::endl;
+            beginResetModel();
+            if (impl->figures[toIndex].type == King) {
+                std::cout << ((impl->figures[fromIndex].side == WHITE) ? "White" : "Black")  << " wins" << std::endl;
+                turn = 42;
+            }
+            impl->figures[toIndex].x = -1;
+            impl->figures[toIndex].y = -1;
+            QModelIndex topLeft = createIndex(toIndex, 0);
+            QModelIndex bottomRight = createIndex(toIndex, 0);
+            emit dataChanged(topLeft, bottomRight);
+            endResetModel();
+        }
+    }
+    // just walking
+    else {
+        if (!movesList->basicMoves(fromX, fromY, toX, toY, impl->figures[fromIndex].side, impl->figures[fromIndex].type)) {
+            std::cout << "Third 2" << std::endl;
+            return false;
+        }
+    }
+    // update model of piece that walked
     beginResetModel();
-    impl->figures[index].x = toX;
-    impl->figures[index].y = toY;
-    QModelIndex topLeft = createIndex(index, 0);
-    QModelIndex bottomRight = createIndex(index, 0);
+    impl->figures[fromIndex].x = toX;
+    impl->figures[fromIndex].y = toY;
+    QModelIndex topLeft = createIndex(fromIndex, 0);
+    QModelIndex bottomRight = createIndex(fromIndex, 0);
     emit dataChanged(topLeft, bottomRight);
     endResetModel();
+
+    std::cout << ((impl->figures[fromIndex].side == WHITE) ? "Black" : "White")  << " turn now" << std::endl;
+    if (turn != 42)
+        turn = turn == 1 ? 0 : 1;
+
+
     return true;
 }

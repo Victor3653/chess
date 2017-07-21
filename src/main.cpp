@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
     Logic logic;
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("logic", &logic);
-//    engine.rootContext()->setContextProperty("moveslist", &moveslist);
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
     return app.exec();

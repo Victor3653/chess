@@ -37,7 +37,7 @@ public:
     int                       boardSize() const;
 
     Q_INVOKABLE void          clear(void);
-    Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY, bool side, unsigned type);
+    Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY);
 
 protected:
     int                       rowCount(const QModelIndex & parent) const override;
