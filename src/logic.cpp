@@ -1,5 +1,6 @@
 #include "logic.h"
 #include "moveslist.h"
+#include "database.h"
 #include <QList>
 #include <QByteArray>
 #include <QHash>
@@ -10,7 +11,6 @@ struct              Figure {
     int             x;
     int             y;
 };
-
 
 struct              Logic::Impl {
     QList<Figure>   figures;
@@ -30,7 +30,7 @@ int                 Logic::Impl::findByPosition(int x, int y) {
     return -1;
 }
 
-bool               Logic::Impl::moveRange(int fromX, int fromY, int toX, int toY) {
+bool                Logic::Impl::moveRange(int fromX, int fromY, int toX, int toY) {
 
     int  stepX  = fromX < toX ? 1 : -1;
     int  stepY  = fromY < toY ? 1 : -1;
@@ -69,7 +69,7 @@ void                Logic::Impl::restart(void) {
     }
 }
 
-Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()) {
+Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()), db(new DataBase()) {
 
     impl->figures << Figure { WHITE, Pawn, 0, 6 };
     impl->figures << Figure { WHITE, Pawn, 1, 6 };
@@ -112,6 +112,9 @@ Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), mo
 
     impl->figures << Figure { BLACK, Queen, 4, 0};
     impl->figures << Figure { BLACK, King, 3, 0};
+    int  b, c, d;
+    bool a;
+    db->get_next_record(a, b, c, d);
 }
 
 Logic::~Logic() {
@@ -242,7 +245,6 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
     std::cout << ((impl->figures[fromIndex].side == WHITE) ? "Black" : "White")  << " turn now" << std::endl;
     if (turn != 42)
         turn = turn == 1 ? 0 : 1;
-
 
     return true;
 }

@@ -3,11 +3,12 @@ TEMPLATE = app
 CONFIG += c++11
 CONFIG += console
 
-QT += qml quick widgets
+QT += qml quick widgets sql
 
 SOURCES += src/main.cpp \
     src/logic.cpp \
-    src/moveslist.cpp
+    src/moveslist.cpp \
+    src/database.cpp
 
 RESOURCES += qml.qrc
 
@@ -16,4 +17,6 @@ QML_IMPORT_PATH =
 
 HEADERS += \
     src/logic.h \
-    src/moveslist.h
+    src/moveslist.h \
+    src/database.h
+
