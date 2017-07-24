@@ -49,10 +49,10 @@ ApplicationWindow {
         id: clearButton
         anchors.bottom: parent.bottom
 
-        text: "restart"
+        text: "Clear"
         anchors.right: back.left
         onClicked: {
-            console.log("Restarted");
+            console.log("Clear");
             logic.clear();
         }
     }
@@ -89,11 +89,42 @@ ApplicationWindow {
 
         Button {
             x: logic.boardSize * squareSize
-            width: root.width - buttonNewGame.x
+            width: root.width - x
             text: "New Game"
             onClicked: {
-                  console.log("New Game");
-                  screen.push(chessPlacement);
+                console.log("New Game");
+                logic.newGame();
+                screen.push(chessPlacement);
+            }
+        }
+    }
+
+    Component {
+        id: saveGame
+
+        Button {
+            x: logic.boardSize * squareSize
+            width: root.width - x
+            text: "Save game"
+            onClicked: {
+                console.log("Save game");
+                logic.saveGame();
+            }
+        }
+    }
+
+    Component {
+        id: endGame
+
+        Button {
+            x: logic.boardSize * squareSize
+            width: root.width - x
+            y: 22
+            text: "End game"
+            onClicked: {
+                console.log("End game");
+                logic.clear();
+                screen.pop()
             }
         }
     }
@@ -103,6 +134,8 @@ ApplicationWindow {
 
         Item {
             Loader {sourceComponent: gameBoard}
+            Loader {sourceComponent: saveGame}
+            Loader {sourceComponent: endGame}
             Repeater {
                 model: logic
                 Image {

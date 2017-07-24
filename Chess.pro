@@ -20,3 +20,10 @@ HEADERS += \
     src/moveslist.h \
     src/database.h
 
+deployment.files += myfile.sqlite
+deployment.path = /assets
+INSTALLS += deployment
+
+DISTFILES += \
+    chess.db \
+    chess.db

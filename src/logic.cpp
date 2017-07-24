@@ -5,18 +5,10 @@
 #include <QByteArray>
 #include <QHash>
 
-struct              Figure {
-    bool            side;
-    unsigned        type;
-    int             x;
-    int             y;
-};
-
 struct              Logic::Impl {
     QList<Figure>   figures;
     int             findByPosition(int x, int y);
     bool            moveRange(int fromX, int fromY, int toX, int toY);
-    void            restart(void);
 };
 
 int                 Logic::Impl::findByPosition(int x, int y) {
@@ -53,68 +45,8 @@ bool                Logic::Impl::moveRange(int fromX, int fromY, int toX, int to
     return (false);
 }
 
-void                Logic::Impl::restart(void) {
-
-    for (auto i = 0; i < ((figures.size() - 2) / 2); ++i) {
-           if (figures[i].side == WHITE) {
-               figures[i].x = i;
-               figures[i].y = WHITE_SP;
-           }
-    }
-    for (auto i = (figures.size() - 2) / 2; i < figures.size() - 2; ++i) {
-           if (figures[i].side == BLACK) {
-               figures[i].x = i - (figures.size() / 2);
-               figures[i].y = BLACK_SP;
-           }
-    }
-}
-
 Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()), db(new DataBase()) {
 
-    impl->figures << Figure { WHITE, Pawn, 0, 6 };
-    impl->figures << Figure { WHITE, Pawn, 1, 6 };
-    impl->figures << Figure { WHITE, Pawn, 2, 6 };
-    impl->figures << Figure { WHITE, Pawn, 3, 6 };
-    impl->figures << Figure { WHITE, Pawn, 4, 6 };
-    impl->figures << Figure { WHITE, Pawn, 5, 6 };
-    impl->figures << Figure { WHITE, Pawn, 6, 6 };
-    impl->figures << Figure { WHITE, Pawn, 7, 6 };
-
-    impl->figures << Figure { BLACK, Pawn, 0, 1 };
-    impl->figures << Figure { BLACK, Pawn, 1, 1 };
-    impl->figures << Figure { BLACK, Pawn, 2, 1 };
-    impl->figures << Figure { BLACK, Pawn, 3, 1 };
-    impl->figures << Figure { BLACK, Pawn, 4, 1 };
-    impl->figures << Figure { BLACK, Pawn, 5, 1 };
-    impl->figures << Figure { BLACK, Pawn, 6, 1 };
-    impl->figures << Figure { BLACK, Pawn, 7, 1 };
-
-    impl->figures << Figure { WHITE, Rook, 0, 7 };
-    impl->figures << Figure { WHITE, Rook, 7, 7 };
-
-    impl->figures << Figure { BLACK, Rook, 0, 0 };
-    impl->figures << Figure { BLACK, Rook, 7, 0 };
-
-    impl->figures << Figure { WHITE, Bishop, 2, 7 };
-    impl->figures << Figure { WHITE, Bishop, 5, 7 };
-
-    impl->figures << Figure { BLACK, Bishop, 2, 0 };
-    impl->figures << Figure { BLACK, Bishop, 5, 0 };
-
-    impl->figures << Figure { WHITE, Knight, 1, 7 };
-    impl->figures << Figure { WHITE, Knight, 6, 7 };
-
-    impl->figures << Figure { BLACK, Knight, 1, 0 };
-    impl->figures << Figure { BLACK, Knight, 6, 0 };
-
-    impl->figures << Figure { WHITE, Queen, 3, 7};
-    impl->figures << Figure { WHITE, King, 4, 7};
-
-    impl->figures << Figure { BLACK, Queen, 4, 0};
-    impl->figures << Figure { BLACK, King, 3, 0};
-    int  b, c, d;
-    bool a;
-    db->get_next_record(a, b, c, d);
 }
 
 Logic::~Logic() {
@@ -165,6 +97,12 @@ void                Logic::clear(void) {
     beginResetModel();
     impl->figures.clear();
     endResetModel();
+    std::cout << "History" << std::endl;
+    db->printMovesHistory();
+    std::cout << "Clearing" << std::endl;
+    db->clearMovesHistory();
+    std::cout << "Cleared" << std::endl;
+    db->printMovesHistory();
 }
 
 bool                Logic::move(int fromX, int fromY, int toX, int toY) {
@@ -224,6 +162,7 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
             QModelIndex bottomRight = createIndex(toIndex, 0);
             emit dataChanged(topLeft, bottomRight);
             endResetModel();
+            saveMove(toIndex);
         }
     }
     // just walking
@@ -242,9 +181,43 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
     emit dataChanged(topLeft, bottomRight);
     endResetModel();
 
+    saveMove(fromIndex);
+    
     std::cout << ((impl->figures[fromIndex].side == WHITE) ? "Black" : "White")  << " turn now" << std::endl;
     if (turn != 42)
         turn = turn == 1 ? 0 : 1;
 
     return true;
+}
+
+void                Logic::newGame(void) {
+    for (auto x = 0; x < 8; ++x) {
+        impl->figures << Figure { BLACK, Pawn, x, 1};
+        impl->figures << Figure { WHITE, Pawn, x, 6};
+    }
+    impl->figures << Figure { WHITE, Rook, 0, 7 };
+    impl->figures << Figure { WHITE, Rook, 7, 7 };
+    impl->figures << Figure { WHITE, Bishop, 2, 7 };
+    impl->figures << Figure { WHITE, Bishop, 5, 7 };
+    impl->figures << Figure { WHITE, Knight, 1, 7 };
+    impl->figures << Figure { WHITE, Knight, 6, 7 };
+    impl->figures << Figure { WHITE, Queen, 3, 7};
+    impl->figures << Figure { WHITE, King, 4, 7};
+
+    impl->figures << Figure { BLACK, Rook, 0, 0 };
+    impl->figures << Figure { BLACK, Rook, 7, 0 };
+    impl->figures << Figure { BLACK, Bishop, 2, 0 };
+    impl->figures << Figure { BLACK, Bishop, 5, 0 };
+    impl->figures << Figure { BLACK, Knight, 1, 0 };
+    impl->figures << Figure { BLACK, Knight, 6, 0 };
+    impl->figures << Figure { BLACK, Queen, 4, 0};
+    impl->figures << Figure { BLACK, King, 3, 0};
+}
+
+void                Logic::saveMove(int index) {
+    db->addChangesToHistory(&(impl->figures[index]), index);
+}
+
+void                Logic::saveGame(void) {
+    db->serializeMovesHistory();
 }

@@ -5,6 +5,13 @@
 class           MovesList;
 class           DataBase;
 
+struct          Figure {
+    bool        side;
+    unsigned    type;
+    int         x;
+    int         y;
+};
+
 class Logic: public QAbstractListModel
 {
     Q_OBJECT
@@ -39,7 +46,9 @@ public:
 
     Q_INVOKABLE void          clear(void);
     Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY);
-
+    Q_INVOKABLE void          newGame(void);
+    Q_INVOKABLE void          saveMove(int index);
+    Q_INVOKABLE void          saveGame(void);
 protected:
     int                       rowCount(const QModelIndex & parent) const override;
     QVariant                  data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
