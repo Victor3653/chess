@@ -71,15 +71,16 @@ ApplicationWindow {
     }
 
     Component {
-        id: mainScreen
-        Item {
-            Loader {
-                id: backgroundLoader
-                sourceComponent: gameBoard
-            }
-            Loader {
-                id: buttonsLoader
-                sourceComponent: buttonNewGame
+        id: buttonLoadGame
+
+        Button {
+            x: logic.boardSize * squareSize
+            width: root.width - x
+            y: 22
+            text: "Load Game"
+            onClicked: {
+                console.log("Load Game");
+                screen.push(loadGameScreen);
             }
         }
     }
@@ -94,13 +95,13 @@ ApplicationWindow {
             onClicked: {
                 console.log("New Game");
                 logic.newGame();
-                screen.push(chessPlacement);
+                screen.push(newGameScreen);
             }
         }
     }
 
     Component {
-        id: saveGame
+        id: buttonSaveGame
 
         Button {
             x: logic.boardSize * squareSize
@@ -114,7 +115,7 @@ ApplicationWindow {
     }
 
     Component {
-        id: endGame
+        id: buttonEndGame
 
         Button {
             x: logic.boardSize * squareSize
@@ -130,12 +131,38 @@ ApplicationWindow {
     }
 
     Component {
+        id: buttonPrevNext
+        
+        Item {
+            Button {
+                id: prev
+
+                x: logic.boardSize * squareSize
+                width: (root.width - x) / 2
+                y: 44
+                text: "Prev"
+                onClicked: {
+                    console.log("Prev");
+                }
+            }
+            Button {
+                id: next
+
+                anchors.left: prev.right
+                width: (root.width - logic.boardSize * squareSize) / 2
+                y: 44
+                text: "Next"
+                onClicked: {
+                    console.log("Next");
+                }
+            }
+        }
+    }
+
+    Component {
         id: chessPlacement
 
         Item {
-            Loader {sourceComponent: gameBoard}
-            Loader {sourceComponent: saveGame}
-            Loader {sourceComponent: endGame}
             Repeater {
                 model: logic
                 Image {
@@ -174,19 +201,77 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: mainScreen
+        Item {
+            Loader {sourceComponent: gameBoard}
+            Loader {sourceComponent: buttonNewGame}
+            Loader {sourceComponent: buttonLoadGame}
+        }
+    }
+
+    Component {
+        id: newGameScreen
+
+        Item {
+            Loader {sourceComponent: gameBoard}
+            Loader {sourceComponent: chessPlacement}
+            Loader {sourceComponent: buttonSaveGame}
+            Loader {sourceComponent: buttonEndGame}
+        }
+    }
+
+    Component {
+        id: loadGameScreen
+
+        Item {
+            Component {
+                id: itemDelegate
+                Text {
+                    font.pixelSize: 24
+
+                    text:  logic.gameName(index) 
+                    MouseArea {
+                        hoverEnabled: true
+                        anchors.fill: parent
+                        onClicked:  {
+                            logic.newGame();
+                            screen.replace(historyScreen);
+                        }
+                        onHoveredChanged: {
+                            if (index > 0)
+                                font.underline = font.underline == true ? false : true;
+                        }
+                    }
+                }
+            }
+            ListView {
+                height: 200
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.topMargin: 10
+                model: logic.gamesSaved
+                delegate: itemDelegate
+            }
+        }
+    }
+
+    Component {
+        id: historyScreen
+
+        Item {
+            Loader {sourceComponent: gameBoard}
+            Loader {sourceComponent: chessPlacement}
+            Loader {sourceComponent: buttonNewGame}
+            Loader {sourceComponent: buttonLoadGame}
+            Loader {sourceComponent: buttonPrevNext}
+        }
+    }
+
     StackView {
         id: screen
         anchors.fill: parent
         initialItem: mainScreen
-
-        Item {
-            id: screenThree
-        }
-    }
-
-    Connections {
-        target: clearButton
-        onClicked: print("clicked")
     }
 }
 
@@ -195,7 +280,7 @@ ApplicationWindow {
 //    visible: true
 //    width: 800
 //    height: 600
-    
+
 //    property int squareSize: 70
 
 //    property var images: [
@@ -209,13 +294,13 @@ ApplicationWindow {
 //      y: 0
 //      width : logic.boardSize * squareSize
 //      height: logic.boardSize * squareSize
-      
+
 //      Image {
 //        source: "/images/chess_board.jpg"
 //        height: gameBoard.height
 //        width: gameBoard.width
 //      }
-      
+
 //      Repeater {
 //        model: logic
 
@@ -227,7 +312,7 @@ ApplicationWindow {
 //          y: squareSize * positionY
 
 //          source: images[type].imgPath
-          
+
 //          MouseArea {
 //            anchors.fill: parent
 //            drag.target: parent
@@ -264,7 +349,7 @@ ApplicationWindow {
 //      anchors.right: parent.right
 //      anchors.leftMargin: 10
 //      anchors.rightMargin: 10
-      
+
 //      text: "Clear"
 
 //      onClicked: {

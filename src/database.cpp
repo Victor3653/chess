@@ -28,20 +28,36 @@ DataBase::~DataBase(void) {
     }
 }
 
-bool    DataBase::get_next_record(bool &side, int &type, int &x, int &y) {
+int     DataBase::getFigureIndex(int index) {
+    QSqlQuery   query;
 
-    QSqlQuery   query("SELECT * FROM newGame where id = 1");
+    query.prepare("SELECT ListID FROM game_" + currentTable + " where id = :index");
+    query.bindValue(":index", index);
+    
+    if (!query.exec()) {
+        std::cout << "err get figure position" << std::endl;
+        return (0);
+    }
 
     query.first();
-    int idSide = query.record().indexOf("Side");
-    int idType = query.record().indexOf("Type");
+    return (query.value(query.record().indexOf("ListID")).toInt());
+}
+
+bool    DataBase::getFigurePosition(int &x, int &y, int index) {
+    QSqlQuery   query;
+    
+    query.prepare("SELECT PosX, PosY FROM game_" + currentTable + " where id = :index");
+    query.bindValue(":index", index);
+
+    if (!query.exec()) {
+        std::cout << "err get figure position" << std::endl;
+        return false;
+    }
+
+    query.first();
     int idPosX = query.record().indexOf("PosX");
     int idPosY = query.record().indexOf("PosY");
 
-    side = query.value(idSide).toBool();
-    std::cout << "Side is: " << (side == true ? "white" : "black") << " ";
-    type = query.value(idType).toInt();
-    std::cout << "type is: " << type << " ";
     x = query.value(idPosX).toInt();
     std::cout << "x: " << x << " ";
     y = query.value(idPosY).toInt();
@@ -98,7 +114,16 @@ void    DataBase::_insertFigure(const Figure &figure, int indexInList) {
         std::cout << "could not insert figure" << std::endl;
 }
 
+int     DataBase::tablesSize(void) {
+    return chessDatabase.tables().size();
+}
 
+QString DataBase::getTableName(int index) {
+    if (index == 0)
+        return QString("Click to select saved game");
+    QString name(chessDatabase.tables().at(index).toLocal8Bit().constData());
+    return name;
+}
 /*
 ** tmp
 */

@@ -42,13 +42,16 @@ public:
     ~Logic();
 
     Q_PROPERTY(int boardSize READ boardSize CONSTANT);
-    int                       boardSize() const;
+    int                       boardSize(void) const;
+    Q_PROPERTY(int gamesSaved READ gamesSaved CONSTANT);
+    int                       gamesSaved(void) const;
 
     Q_INVOKABLE void          clear(void);
     Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY);
     Q_INVOKABLE void          newGame(void);
     Q_INVOKABLE void          saveMove(int index);
     Q_INVOKABLE void          saveGame(void);
+    Q_INVOKABLE QString       gameName(int index);
 protected:
     int                       rowCount(const QModelIndex & parent) const override;
     QVariant                  data(const QModelIndex & index, int role = Qt::DisplayRole) const override;

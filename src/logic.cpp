@@ -4,6 +4,7 @@
 #include <QList>
 #include <QByteArray>
 #include <QHash>
+#include <QListWidget>
 
 struct              Logic::Impl {
     QList<Figure>   figures;
@@ -53,8 +54,12 @@ Logic::~Logic() {
 
 }
 
-int                 Logic::boardSize() const {
+int                 Logic::boardSize(void) const {
     return BOARD_SIZE;
+}
+
+int                 Logic::gamesSaved(void) const{
+    return db->tablesSize();
 }
 
 int                 Logic::rowCount(const QModelIndex & ) const {
@@ -220,4 +225,8 @@ void                Logic::saveMove(int index) {
 
 void                Logic::saveGame(void) {
     db->serializeMovesHistory();
+}
+
+QString              Logic::gameName(int index) {
+    return db->getTableName(index);
 }

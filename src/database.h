@@ -17,11 +17,13 @@ class DataBase
 public:
     DataBase(void);
     ~DataBase(void);
-    bool            get_next_record(bool &side, int &type, int &x, int &y);
+    int             getFigureIndex(int index);
+    bool            getFigurePosition(int &x, int &y, int index);
     void            addChangesToHistory(Figure *figure, int indexInList);
     void            clearMovesHistory(void);
     void            printMovesHistory(void);
-
+    int             tablesSize(void);
+    QString         getTableName(int index);
     void            serializeMovesHistory(void);
 
 private:
