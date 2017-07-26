@@ -15,10 +15,6 @@ DataBase::DataBase() {
         std::cout << "Database: connection ok" << std::endl;
     else
         std::cout << "Error: connection with database fail" << std::endl;
-    // QStringList     tables;
-    // tables = chessDatabase.tables();
-    // for (int i = 0; i < tables.size(); ++i)
-    //      std::cout << tables.at(i).toLocal8Bit().constData() << endl;
 }
 
 DataBase::~DataBase(void) {
@@ -28,11 +24,11 @@ DataBase::~DataBase(void) {
     }
 }
 
-int     DataBase::getFigureIndex(int index) {
+int     DataBase::getFigureIndex(void) {
     QSqlQuery   query;
 
-    query.prepare("SELECT ListID FROM game_" + currentTable + " where id = :index");
-    query.bindValue(":index", index);
+    query.prepare("SELECT ListID FROM " + currentTable + " where id = :index");
+    query.bindValue(":index", _recordIndex);
     
     if (!query.exec()) {
         std::cout << "err get figure position" << std::endl;
@@ -43,14 +39,14 @@ int     DataBase::getFigureIndex(int index) {
     return (query.value(query.record().indexOf("ListID")).toInt());
 }
 
-bool    DataBase::getFigurePosition(int &x, int &y, int index) {
+bool    DataBase::getFigurePosition(int &x, int &y) {
     QSqlQuery   query;
     
-    query.prepare("SELECT PosX, PosY FROM game_" + currentTable + " where id = :index");
-    query.bindValue(":index", index);
+    query.prepare("SELECT PosX, PosY FROM " + currentTable + " where id = :index");
+    query.bindValue(":index", _recordIndex);
 
     if (!query.exec()) {
-        std::cout << "err get figure position" << std::endl;
+        std::cout << "err get figure x & y" << std::endl;
         return false;
     }
 
@@ -59,21 +55,16 @@ bool    DataBase::getFigurePosition(int &x, int &y, int index) {
     int idPosY = query.record().indexOf("PosY");
 
     x = query.value(idPosX).toInt();
-    std::cout << "x: " << x << " ";
     y = query.value(idPosY).toInt();
-    std::cout << "y: " << y << std::endl;
     return (true);
 }
 
-void    DataBase::addChangesToHistory(Figure *figure, int indexInList) {
-    Figure     figureToSave;
+void    DataBase::addToMovesHistory(Figure *figure, int listID, int isHit, int toX, int toY) {
 
-    figureToSave.x = figure->x;
-    figureToSave.y = figure->y;
-    figureToSave.type = figure->type;
-    figureToSave.side = figure->side;
-
-    movesHistory << std::make_pair(indexInList, figureToSave);
+    movesHistory << std::make_pair(PrevPosition {figure->x, figure->y, listID}, 
+                                   NextPosition {toX, toY, isHit});
+    qDebug() << "List id :" << listID  << "Is hit:" << isHit << "Old pos:" << figure->x << figure->y 
+    << "New pos:" <<  toX << toY;
 }
 
 void    DataBase::clearMovesHistory(void) {
@@ -86,32 +77,50 @@ void    DataBase::serializeMovesHistory(void) {
     _createTable();
 
     for (auto i = 0; i < movesHistory.size(); ++i){
-        _insertFigure(std::get<1>(movesHistory.at(i)), std::get<0>(movesHistory.at(i)));
+        _insertMove(std::get<0>(movesHistory[i]), std::get<1>(movesHistory[i]));
+        qDebug() << "Inserted [" << i << "] move";
     }
 }
 
 void    DataBase::_createTable(void) {
     QString     tableName(QDateTime::currentDateTime().toString("HH_mm_ss_dd_MM_yy"));
 
-    qDebug() << tableName;
+    qDebug() << "Table name: " << tableName;
     currentTable = tableName;
 
     QSqlQuery query;
-    query.prepare("CREATE TABLE game_" + tableName +  " (ID INTEGER PRIMARY KEY AUTOINCREMENT, ListID INTEGER, PosX INTEGER, PosY INTEGER);");
+    query.prepare("CREATE TABLE game_" + tableName +  " (   ID INTEGER PRIMARY KEY AUTOINCREMENT, \
+                                                            ListID   INTEGER, \
+                                                            isHit    INTEGER, \
+                                                            PrevPosX INTEGER, \
+                                                            PrevPosY INTEGER, \
+                                                            NextPosX INTEGER, \
+                                                            NextPosY INTEGER);");
     if (!query.exec())
-        std::cout << "Couldn't create the table" << std::endl;
+        qDebug() << "Couldn't create the table" ;
 }
 
-void    DataBase::_insertFigure(const Figure &figure, int indexInList) {
+int     DataBase::_countRows(void) {
+    QSqlQuery   query("select count(*) from " + currentTable);
+
+    query.first();
+    return query.value(0).toInt();
+}
+
+void    DataBase::_insertMove(const PrevPosition &prev, const NextPosition &next) {
     QSqlQuery   query;
 
-    query.prepare("INSERT INTO game_" + currentTable + " (ListID, PosX, PosY) VALUES (:ListID, :x, :y);");
-    query.bindValue(":ListID", indexInList);
-    query.bindValue(":x", figure.x);
-    query.bindValue(":y", figure.y);
+    query.prepare("INSERT INTO game_" + currentTable + " (ListID, isHit, PrevPosX, PrevPosY, NextPosX, NextPosY) VALUES \
+                                                         (:ListID, :isHit, :PrevPosX, :PrevPosY, :NextPosX, :NextPosY);");
+    query.bindValue(":ListID", prev.index);
+    query.bindValue(":isHit", next.isHit);
+    query.bindValue(":PrevPosX", prev.x);
+    query.bindValue(":PrevPosY", prev.y);
+    query.bindValue(":NextPosX", next.x);
+    query.bindValue(":NextPosY", next.y);
 
     if (!query.exec())
-        std::cout << "could not insert figure" << std::endl;
+        qDebug() << "Couldn't insert figure" << query.lastError().text();
 }
 
 int     DataBase::tablesSize(void) {
@@ -124,12 +133,39 @@ QString DataBase::getTableName(int index) {
     QString name(chessDatabase.tables().at(index).toLocal8Bit().constData());
     return name;
 }
-/*
-** tmp
-*/
-void    DataBase::printMovesHistory(void) {
-    for (auto i = 0; i < movesHistory.size(); ++i) {
-        std::cout << std::get<0>(movesHistory.at(i)) << " ";
-        std::cout << "X : " << std::get<1>(movesHistory.at(i)).x << " Y: " <<  std::get<1>(movesHistory.at(i)).y << std::endl;
-    }
+
+void    DataBase::setCurrentTable(int index) {
+    currentTable = getTableName(index);
+    _recordIndex = 1;
+    _maxRecordIndex = _countRows();
+}
+
+void    DataBase::setRecordIndex(int set) {
+    _recordIndex = set;
+}
+
+int     DataBase::getRecordIndex(void) {
+    return _recordIndex;
+}
+
+// bool    DataBase::checkRecordIndex(int step) {
+//     int     index = _recordIndex + step;
+
+//     if (index >= _maxRecordIndex && index >= 0)
+//         return true;
+//     return false;
+// }
+
+void   DataBase::getRecord(int &x, int &y, int &figureIndex) {
+    QSqlQuery   query;
+
+    query.prepare("select NextPosX, NextPosY, ListID from " + currentTable + " where id = :index");
+    query.bindValue(":index", _recordIndex);
+
+    if (!query.exec())
+        qDebug() << "Failed to get next record";
+    query.first();
+    x = query.value(query.record().indexOf("NextPosX")).toInt();
+    y = query.value(query.record().indexOf("NextPosY")).toInt();
+    figureIndex = query.value(query.record().indexOf("ListID")).toInt();
 }

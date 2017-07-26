@@ -46,6 +46,16 @@ bool                Logic::Impl::moveRange(int fromX, int fromY, int toX, int to
     return (false);
 }
 
+void                Logic::_applyChanges(int x, int y, int index) {
+    beginResetModel();
+    impl->figures[index].x = x;
+    impl->figures[index].y = y;
+    QModelIndex topLeft = createIndex(index, 0);
+    QModelIndex bottomRight = createIndex(index, 0);
+    emit dataChanged(topLeft, bottomRight);
+    endResetModel();
+}
+
 Logic::Logic(QObject *parent) : QAbstractListModel(parent), impl(new Impl()), movesList(new MovesList()), db(new DataBase()) {
 
 }
@@ -102,23 +112,20 @@ void                Logic::clear(void) {
     beginResetModel();
     impl->figures.clear();
     endResetModel();
-    std::cout << "History" << std::endl;
-    db->printMovesHistory();
     std::cout << "Clearing" << std::endl;
     db->clearMovesHistory();
-    std::cout << "Cleared" << std::endl;
-    db->printMovesHistory();
+    _turn = 0;
 }
 
 bool                Logic::move(int fromX, int fromY, int toX, int toY) {
     std::cout << fromX << " " << fromY << " " << toX << " " << toY << std::endl;
 
-    static int      turn = 0;
     int             fromIndex = impl->findByPosition(fromX, fromY);
     int             toIndex = impl->findByPosition(toX, toY);
     bool            in_gameboard = (toX >= 0 && toX < BOARD_SIZE && toY >= 0 && toY < BOARD_SIZE);
+    int             isHit = 0;
     // What it is 42, maybe it's an end of game or begining of maybe it's a new one
-    if (turn == 42 || ((bool)turn) == impl->figures[fromIndex].side)
+    if (_turn == 42 || ((bool)_turn) == impl->figures[fromIndex].side)
         return false;
     
     if (fromIndex < 0 || !in_gameboard){
@@ -156,18 +163,12 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
         // update model that was hit
         else {
             std::cout << "hitting opponent" << std::endl;
-            beginResetModel();
             if (impl->figures[toIndex].type == King) {
                 std::cout << ((impl->figures[fromIndex].side == WHITE) ? "White" : "Black")  << " wins" << std::endl;
-                turn = 42;
+                _turn = 42;
             }
-            impl->figures[toIndex].x = -1;
-            impl->figures[toIndex].y = -1;
-            QModelIndex topLeft = createIndex(toIndex, 0);
-            QModelIndex bottomRight = createIndex(toIndex, 0);
-            emit dataChanged(topLeft, bottomRight);
-            endResetModel();
-            saveMove(toIndex);
+            _applyChanges(-1, -1, toIndex);
+            isHit = 1;
         }
     }
     // just walking
@@ -178,19 +179,12 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
         }
     }
     // update model of piece that walked
-    beginResetModel();
-    impl->figures[fromIndex].x = toX;
-    impl->figures[fromIndex].y = toY;
-    QModelIndex topLeft = createIndex(fromIndex, 0);
-    QModelIndex bottomRight = createIndex(fromIndex, 0);
-    emit dataChanged(topLeft, bottomRight);
-    endResetModel();
-
-    saveMove(fromIndex);
+    _saveMove(&impl->figures[fromIndex], fromIndex, isHit, toX, toY);
+    _applyChanges(toX, toY, fromIndex);
     
     std::cout << ((impl->figures[fromIndex].side == WHITE) ? "Black" : "White")  << " turn now" << std::endl;
-    if (turn != 42)
-        turn = turn == 1 ? 0 : 1;
+    if (_turn != 42)
+        _turn = _turn == 1 ? 0 : 1;
 
     return true;
 }
@@ -217,16 +211,32 @@ void                Logic::newGame(void) {
     impl->figures << Figure { BLACK, Knight, 6, 0 };
     impl->figures << Figure { BLACK, Queen, 4, 0};
     impl->figures << Figure { BLACK, King, 3, 0};
+    _turn = 0;
 }
 
-void                Logic::saveMove(int index) {
-    db->addChangesToHistory(&(impl->figures[index]), index);
+void                Logic::_saveMove(Figure *figure, int listID, int isHit, int toX, int toY) {
+    db->addToMovesHistory(figure, listID, isHit, toX, toY);
 }
 
 void                Logic::saveGame(void) {
     db->serializeMovesHistory();
 }
 
-QString              Logic::gameName(int index) {
+QString             Logic::gameName(int index) {
     return db->getTableName(index);
+}
+
+void                Logic::selectGame(int index) {
+    db->setCurrentTable(index);
+}
+
+void                Logic::nextMove(void) {
+    int     x, y, figureIndex;
+    int     toIndex;
+
+    db->getRecord(x, y, figureIndex);
+    toIndex = impl->findByPosition(x, y);
+    if (toIndex > 0)
+        _applyChanges(-1, -1, toIndex);
+    _applyChanges(x, y, figureIndex);
 }

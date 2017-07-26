@@ -94,6 +94,7 @@ ApplicationWindow {
             text: "New Game"
             onClicked: {
                 console.log("New Game");
+                logic.clear();
                 logic.newGame();
                 screen.push(newGameScreen);
             }
@@ -142,6 +143,7 @@ ApplicationWindow {
                 y: 44
                 text: "Prev"
                 onClicked: {
+                    // logic.moveOnHistory(false);
                     console.log("Prev");
                 }
             }
@@ -153,6 +155,7 @@ ApplicationWindow {
                 y: 44
                 text: "Next"
                 onClicked: {
+                    logic.nextMove();
                     console.log("Next");
                 }
             }
@@ -235,12 +238,18 @@ ApplicationWindow {
                         hoverEnabled: true
                         anchors.fill: parent
                         onClicked:  {
-                            logic.newGame();
-                            screen.replace(historyScreen);
+                            if (index > 0) {
+                                logic.clear();
+                                logic.newGame();
+                                logic.selectGame(index);
+                                screen.replace(historyScreen);
+                            }
                         }
                         onHoveredChanged: {
-                            if (index > 0)
+                            if (index > 0) {
                                 font.underline = font.underline == true ? false : true;
+                                font.bold = font.bold == true ? false : true;
+                            }
                         }
                     }
                 }
