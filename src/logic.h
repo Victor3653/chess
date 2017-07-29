@@ -49,12 +49,12 @@ public:
     Q_INVOKABLE void          clear(void);
     Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY);
     Q_INVOKABLE void          newGame(void);
-    // Saves move
     // Saves game
     Q_INVOKABLE void          saveGame(void);
     Q_INVOKABLE void          selectGame(int index);
     Q_INVOKABLE QString       gameName(int index);
-    Q_INVOKABLE void          nextMove(void);
+    Q_INVOKABLE void          next(void);
+    Q_INVOKABLE void          prev(void);
 
 protected:
     int                       rowCount(const QModelIndex & parent) const override;
@@ -68,5 +68,6 @@ private:
     std::unique_ptr<DataBase>  db;
     int                        _turn;
     void                       _applyChanges(int x, int y, int index);
-    void                       _saveMove(Figure *figure, int listID, int isHit, int toX, int toY);
+    // Saves move
+    void                       _saveMove(int listID, int listIDH, int isHit, int toX, int toY);
 };

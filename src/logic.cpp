@@ -167,7 +167,6 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
                 std::cout << ((impl->figures[fromIndex].side == WHITE) ? "White" : "Black")  << " wins" << std::endl;
                 _turn = 42;
             }
-            _applyChanges(-1, -1, toIndex);
             isHit = 1;
         }
     }
@@ -179,7 +178,9 @@ bool                Logic::move(int fromX, int fromY, int toX, int toY) {
         }
     }
     // update model of piece that walked
-    _saveMove(&impl->figures[fromIndex], fromIndex, isHit, toX, toY);
+    _saveMove(fromIndex, toIndex, isHit, toX, toY);
+    if (isHit)
+        _applyChanges(-1, -1, toIndex);
     _applyChanges(toX, toY, fromIndex);
     
     std::cout << ((impl->figures[fromIndex].side == WHITE) ? "Black" : "White")  << " turn now" << std::endl;
@@ -214,8 +215,11 @@ void                Logic::newGame(void) {
     _turn = 0;
 }
 
-void                Logic::_saveMove(Figure *figure, int listID, int isHit, int toX, int toY) {
-    db->addToMovesHistory(figure, listID, isHit, toX, toY);
+void                Logic::_saveMove(int listID, int listIDH, int isHit, int toX, int toY) {
+    if (isHit)
+        db->addToMovesHistory(&impl->figures[listID], listID, &impl->figures[listIDH], listIDH);
+    else
+        db->addToMovesHistory(&impl->figures[listID], listID, toX, toY);
 }
 
 void                Logic::saveGame(void) {
@@ -230,13 +234,28 @@ void                Logic::selectGame(int index) {
     db->setCurrentTable(index);
 }
 
-void                Logic::nextMove(void) {
-    int     x, y, figureIndex;
-    int     toIndex;
+void                Logic::next(void) {
+    int     x, y, figureIndex, toIndex;
 
-    db->getRecord(x, y, figureIndex);
-    toIndex = impl->findByPosition(x, y);
-    if (toIndex > 0)
-        _applyChanges(-1, -1, toIndex);
-    _applyChanges(x, y, figureIndex);
+    db->setRecordIndex(db->getRecordIndex() + 1);
+    if (db->getFigureIndexRecord(figureIndex, false) && db->getRecord(x, y, true)) {
+        std::cout << figureIndex << " " << x << " " << y << std::endl;
+        toIndex = impl->findByPosition(x, y);
+        if (toIndex > 0)
+            _applyChanges(-1, -1, toIndex);
+        _applyChanges(x, y, figureIndex);
+    }
+}
+void                Logic::prev(void) {
+    int     x, y, figureIndex;
+
+    if (db->getFigureIndexRecord(figureIndex, false) && db->getRecord(x, y, false)) {
+        _applyChanges(x, y, figureIndex);
+        if (db->isRecordOfHIt()) {
+            std::cout << "Record of hit" << std::endl;
+            if (db->getFigureIndexRecord(figureIndex, true) && db->getRecord(x, y, true))
+                _applyChanges(x, y, figureIndex);
+        }
+        db->setRecordIndex(db->getRecordIndex() - 1);
+    }
 }

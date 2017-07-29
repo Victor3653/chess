@@ -143,7 +143,7 @@ ApplicationWindow {
                 y: 44
                 text: "Prev"
                 onClicked: {
-                    // logic.moveOnHistory(false);
+                    logic.prev();
                     console.log("Prev");
                 }
             }
@@ -155,7 +155,7 @@ ApplicationWindow {
                 y: 44
                 text: "Next"
                 onClicked: {
-                    logic.nextMove();
+                    logic.next();
                     console.log("Next");
                 }
             }
