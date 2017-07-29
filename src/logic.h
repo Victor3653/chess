@@ -1,6 +1,10 @@
 #pragma once
-#include <memory>
-#include <QAbstractListModel>
+# include <memory>
+# include <QAbstractListModel>
+# include <QDebug>
+# include <QList>
+# include <QByteArray>
+# include <QHash>
 
 class           MovesList;
 class           DataBase;
@@ -49,7 +53,6 @@ public:
     Q_INVOKABLE void          clear(void);
     Q_INVOKABLE bool          move(int fromX, int fromY, int toX, int toY);
     Q_INVOKABLE void          newGame(void);
-    // Saves game
     Q_INVOKABLE void          saveGame(void);
     Q_INVOKABLE void          selectGame(int index);
     Q_INVOKABLE QString       gameName(int index);
@@ -62,12 +65,11 @@ protected:
     QHash<int, QByteArray>    roleNames() const override;
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> impl;
+    struct                     Impl;
+    std::unique_ptr<Impl>      impl;
     std::unique_ptr<MovesList> movesList;
     std::unique_ptr<DataBase>  db;
-    int                        _turn;
-    void                       _applyChanges(int x, int y, int index);
-    // Saves move
-    void                       _saveMove(int listID, int listIDH, int isHit, int toX, int toY);
+    int32_t                    _turn;
+    void                       _applyChanges(int32_t x, int32_t y, int32_t index);
+    void                       _saveMove(int32_t listID, int32_t listIDH, int32_t isHit, int32_t toX, int32_t toY);
 };

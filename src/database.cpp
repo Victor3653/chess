@@ -169,10 +169,10 @@ void    DataBase::_insertMove(const PrevPosition &prev, const NextPosition &next
     query.prepare("insert into game_" + _currentTable + " ( PrevListID, \
                                                             PrevPosX, \
                                                             PrevPosY, \
-                                                            NextListID, \ 
+                                                            NextListID, \
                                                             NextPosX, \
                                                             NextPosY, \
-                                                            isHit) 
+                                                            isHit) \
                                                 values    ( :PrevListID, \
                                                             :PrevPosX, \
                                                             :PrevPosY, \

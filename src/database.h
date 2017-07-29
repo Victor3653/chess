@@ -7,7 +7,6 @@
 # include <QSqlRecord>
 # include <QVector>
 # include <QSqlError>
-# include <QDebug>
 # include <QDateTime>
 # include <iostream>
 # include <utility>
