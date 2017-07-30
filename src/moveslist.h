@@ -7,7 +7,6 @@
 # define BLACK_SP  1
 # define WHITE     true
 # define BLACK     false
-# define ABS       (((x) < 0) ? -(x) : (x))
 
 class MovesList
 {

@@ -171,6 +171,7 @@ void                Logic::saveGame(void) {
 
 void                Logic::selectGame(int index) {
     db->setCurrentTable(index);
+    _turn = 42;
 }
 
 QString             Logic::gameName(int index) {
