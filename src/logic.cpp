@@ -22,6 +22,7 @@ bool                Logic::Impl::moveRange(int32_t fromX, int32_t fromY, int32_t
 
     int32_t  stepX = fromX < toX ? 1 : -1;
     int32_t  stepY = fromY < toY ? 1 : -1;
+    bool      isInGameboard;
 
     if (fromX == toX)
         stepX = 0;
@@ -31,13 +32,14 @@ bool                Logic::Impl::moveRange(int32_t fromX, int32_t fromY, int32_t
         stepY = 0;
     else
         fromY += stepY;
-    while((fromX != toX || fromY != toY) && fromX < BOARD_SIZE && fromY < BOARD_SIZE)
+    isInGameboard = fromX < BOARD_SIZE && fromY < BOARD_SIZE && fromX >= 0 && fromY >= 0;
+    while((fromX != toX || fromY != toY) && isInGameboard)
     {
         if (findByPosition(fromX, fromY) >= 0)
             return (true);
         fromX += stepX;
         fromY += stepY;
-        qDebug() << "here";
+        isInGameboard = fromX < BOARD_SIZE && fromY < BOARD_SIZE && fromX >= 0 && fromY >= 0;
     }
     return (false);
 }
