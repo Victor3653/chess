@@ -7,9 +7,8 @@ ApplicationWindow {
     id: root
     title: qsTr("Chess")
     visible: true
-    width: 800
-    height: 600
-    color: "#e9f4ef"
+    minimumWidth: logic.boardSize * squareSize + squareSize * 4
+    minimumHeight: logic.boardSize * squareSize
 
     property int squareSize: 70
 
@@ -33,30 +32,6 @@ ApplicationWindow {
         ]
     ]
 
-    Button {
-        id: back
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-
-        text: "Back"
-        onClicked: {
-            console.log("Pop view");
-            screen.pop()
-        }
-}
-
-    Button {
-        id: clearButton
-        anchors.bottom: parent.bottom
-
-        text: "Clear"
-        anchors.right: back.left
-        onClicked: {
-            console.log("Clear");
-            logic.clear();
-        }
-    }
-
     Component {
         // First screen
         id: gameBoard
@@ -75,11 +50,13 @@ ApplicationWindow {
 
         Button {
             x: logic.boardSize * squareSize
+            y: squareSize
             width: root.width - x
-            y: 22
+            height: squareSize
             text: "Load Game"
             onClicked: {
                 console.log("Load Game");
+                screen.pop(null);
                 screen.push(loadGameScreen);
             }
         }
@@ -91,11 +68,14 @@ ApplicationWindow {
         Button {
             x: logic.boardSize * squareSize
             width: root.width - x
+            height: squareSize
+
             text: "New Game"
             onClicked: {
                 console.log("New Game");
                 logic.clear();
                 logic.newGame();
+                screen.pop(null);
                 screen.push(newGameScreen);
             }
         }
@@ -107,6 +87,7 @@ ApplicationWindow {
         Button {
             x: logic.boardSize * squareSize
             width: root.width - x
+            height: squareSize
             text: "Save game"
             onClicked: {
                 console.log("Save game");
@@ -120,12 +101,28 @@ ApplicationWindow {
 
         Button {
             x: logic.boardSize * squareSize
+            y: squareSize
             width: root.width - x
-            y: 22
+            height: squareSize
             text: "End game"
             onClicked: {
                 console.log("End game");
                 logic.clear();
+                screen.pop()
+            }
+        }
+    }
+
+    Component {
+        id: buttonBack
+
+        Button {
+            x: logic.boardSize * squareSize
+            width: root.width - x
+            height: squareSize
+            text: "Back"
+            onClicked: {
+                console.log("Back");
                 screen.pop()
             }
         }
@@ -139,8 +136,9 @@ ApplicationWindow {
                 id: prev
 
                 x: logic.boardSize * squareSize
+                y: squareSize * 2
                 width: (root.width - x) / 2
-                y: 44
+                height: squareSize
                 text: "Prev"
                 onClicked: {
                     logic.prev();
@@ -151,8 +149,9 @@ ApplicationWindow {
                 id: next
 
                 anchors.left: prev.right
+                anchors.verticalCenter: prev.verticalCenter
                 width: (root.width - logic.boardSize * squareSize) / 2
-                y: 44
+                height: squareSize
                 text: "Next"
                 onClicked: {
                     logic.next();
@@ -231,25 +230,19 @@ ApplicationWindow {
             Component {
                 id: itemDelegate
                 Text {
-                    font.pixelSize: 24
-
                     text:  logic.gameName(index) 
                     MouseArea {
                         hoverEnabled: true
                         anchors.fill: parent
                         onClicked:  {
-                            if (index > 0) {
                                 logic.clear();
                                 logic.newGame();
                                 logic.selectGame(index);
                                 screen.replace(historyScreen);
-                            }
                         }
                         onHoveredChanged: {
-                            if (index > 0) {
                                 font.underline = font.underline == true ? false : true;
                                 font.bold = font.bold == true ? false : true;
-                            }
                         }
                     }
                 }
@@ -261,6 +254,9 @@ ApplicationWindow {
                 anchors.topMargin: 10
                 model: logic.gamesSaved
                 delegate: itemDelegate
+
+                header: Text {text: "Click to choose"}
+                Loader {sourceComponent: buttonBack}
             }
         }
     }
@@ -282,100 +278,9 @@ ApplicationWindow {
         anchors.fill: parent
         initialItem: mainScreen
     }
+    Text {
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        text: qsTr("vpopovyc / 2017   ");
+    }
 }
-
-//ApplicationWindow {
-//    title: qsTr("Chess")
-//    visible: true
-//    width: 800
-//    height: 600
-
-//    property int squareSize: 70
-
-//    property var images: [
-//      {'imgPath' : "/images/white_pawn.svg"},
-//      {'imgPath' : "/images/black_pawn.svg"},
-//    ]
-
-//    Item {
-//      id: gameBoard
-//      x: 0
-//      y: 0
-//      width : logic.boardSize * squareSize
-//      height: logic.boardSize * squareSize
-
-//      Image {
-//        source: "/images/chess_board.jpg"
-//        height: gameBoard.height
-//        width: gameBoard.width
-//      }
-
-//      Repeater {
-//        model: logic
-
-//        Image {
-//          height: squareSize
-//          width : squareSize
-
-//          x: squareSize * positionX
-//          y: squareSize * positionY
-
-//          source: images[type].imgPath
-
-//          MouseArea {
-//            anchors.fill: parent
-//            drag.target: parent
-
-//            property int startX: 0
-//            property int startY: 0
-
-//            onPressed: {
-//              console.log("On press: ", parent.x, parent.y);
-//              startX = parent.x;
-//              startY = parent.y;
-//            }
-
-//            onReleased: {
-//              var fromX = startX / squareSize;
-//              var fromY = startY / squareSize;
-//              var toX   = (parent.x + mouseX) / squareSize;
-//              var toY   = (parent.y + mouseY) / squareSize;
-
-//              if (!logic.move(fromX, fromY, toX, toY))
-//              {
-//                    parent.x = startX;
-//                    parent.y = startY;
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
-
-//    Button {
-//      id: clearButton
-//      anchors.left: gameBoard.right
-//      anchors.right: parent.right
-//      anchors.leftMargin: 10
-//      anchors.rightMargin: 10
-
-//      text: "Clear"
-
-//      onClicked: {
-//        logic.clear();
-//      }
-//    }
-//    Button {
-//        id: testButton
-//        anchors.left: gameBoard.right
-//        anchors.top: clearButton.bottom
-//        anchors.right: parent.right
-//        anchors.leftMargin: 10
-//        anchors.rightMargin: 10
-
-//        text: "Test"
-//        onClicked: {
-//          console.log("Test");
-//        }
-//    }
-//}

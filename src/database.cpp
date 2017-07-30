@@ -52,14 +52,15 @@ void    DataBase::serializeMovesHistory(void) {
 }
 
 int32_t DataBase::tablesSize(void) {
+    qDebug() << "Database:" << _chessDatabase.tables().size() << "tables";
     return (_chessDatabase.tables().size());
 }
 
 QString DataBase::getTableName(int32_t index) {
     QString name(_chessDatabase.tables().at(index).toLocal8Bit().constData());
 
-    if (index == 0)
-        return (QString("Click to select saved game"));
+    if (!name.compare("sqlite_sequence"))
+        return (QString(""));
     return (name);
 }
 
@@ -176,7 +177,7 @@ void    DataBase::_insertMove(const PrevPosition &prev, const NextPosition &next
                                                 values    ( :PrevListID, \
                                                             :PrevPosX, \
                                                             :PrevPosY, \
-                                                            :NextListID, \
+                                                            :NextListID,\
                                                             :NextPosX, \
                                                             :NextPosY, \
                                                             :isHit);");
