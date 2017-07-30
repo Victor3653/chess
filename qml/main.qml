@@ -31,6 +31,7 @@ ApplicationWindow {
             {'imgPath' : "/images/black_king.svg"}
         ]
     ]
+    color: "#A1A0CE"
 
     Component {
         // First screen
